@@ -26,8 +26,8 @@
 
 ## Milestone 3 — Subtitle experience
 
-- Add translated-only and bilingual overlays.
-- Add fullscreen support and basic styling.
+- [x] Add translated-only and bilingual overlays.
+- [x] Add fullscreen support and configurable subtitle styling.
 - Add pause, resume, stop, and user-confirmed performance fallback.
 - Export SRT, WebVTT, and TXT.
 

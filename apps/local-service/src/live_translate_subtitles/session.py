@@ -170,7 +170,7 @@ class TranscriptionSession:
             bytes_since_transcription = 0
             segments = await self._engine.transcribe(bytes(rolling))
             for segment in segments:
-                translated_text = await self._translate(segment)
+                translated_source_text, translated_text = await self._translate(segment)
                 self._emit(
                     {
                         "protocolVersion": 1,
@@ -180,6 +180,7 @@ class TranscriptionSession:
                         "segmentId": segment.segment_id,
                         "sourceLanguage": segment.source_language,
                         "sourceText": segment.text,
+                        "translatedSourceText": translated_source_text,
                         "translatedText": translated_text,
                         "startTimeMs": segment.start_time_ms,
                         "endTimeMs": segment.end_time_ms,
@@ -191,9 +192,9 @@ class TranscriptionSession:
                 rolling.clear()
             self._emit_status("busy", self._engine.last_latency_ms)
 
-    async def _translate(self, segment: TranscriptSegment) -> str:
+    async def _translate(self, segment: TranscriptSegment) -> tuple[str, str]:
         if self._translator is None:
-            return ""
+            return "", ""
         completed = _completed_sentences(segment.text, segment.is_final)
         stable = completed if segment.is_final else tuple(
             text for text in completed if text in self._previous_completed
@@ -201,7 +202,7 @@ class TranscriptionSession:
         self._previous_completed = set(completed)
         untranslated = [text for text in stable if text not in self._recently_translated]
         if not untranslated:
-            return ""
+            return "", ""
         source_text = " ".join(untranslated)
         wait_seconds = TRANSLATION_THROTTLE_SECONDS - (monotonic() - self._last_translation_at)
         if wait_seconds > 0:
@@ -227,11 +228,11 @@ class TranscriptionSession:
                     "recoverable": True,
                 }
             )
-            return ""
+            return "", ""
         self._translation_context.append(source_text)
         self._recently_translated.extend(untranslated)
         self._last_translation_at = monotonic()
-        return result.translated_text
+        return source_text, result.translated_text
 
     def _emit_status(self, status: str, queue_delay_ms: int) -> None:
         message: dict[str, object] = {

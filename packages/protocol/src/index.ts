@@ -37,6 +37,7 @@ export interface SubtitleUpdateMessage {
   readonly segmentId: string;
   readonly sourceLanguage: string;
   readonly sourceText: string;
+  readonly translatedSourceText: string;
   readonly translatedText: string;
   readonly startTimeMs: number;
   readonly endTimeMs: number;
@@ -84,4 +85,3 @@ export function hasSupportedProtocolVersion(value: unknown): value is {
     value.protocolVersion === PROTOCOL_VERSION
   );
 }
-

@@ -118,6 +118,7 @@ class SessionTests(unittest.TestCase):
 
         session.stop()
         updates = [message for message in emitted if message.get("type") == "subtitle.update"]
+        self.assertEqual(updates[0]["translatedSourceText"], "received 76800 bytes")
         self.assertEqual(updates[0]["translatedText"], "translated: received 76800 bytes")
         self.assertFalse(translator.loaded)
 
@@ -188,6 +189,10 @@ class SessionTests(unittest.TestCase):
         self.assertEqual(
             updates[-1]["translatedText"],
             "translated: This sentence is complete.",
+        )
+        self.assertEqual(
+            updates[-1]["translatedSourceText"],
+            "This sentence is complete.",
         )
 
 

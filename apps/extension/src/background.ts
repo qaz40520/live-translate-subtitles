@@ -2,6 +2,7 @@ import {
   PROTOCOL_VERSION,
   type AudioChunkMessage,
   type ServiceToExtensionMessage,
+  type ServiceStatusMessage,
   type StartSessionMessage,
   type StopSessionMessage,
 } from "@lts/protocol";
@@ -17,6 +18,8 @@ interface ActiveSession {
 
 let activeSession: ActiveSession | undefined;
 let creatingOffscreenDocument: Promise<void> | undefined;
+let latestServiceStatus: ServiceStatusMessage | undefined;
+let latestServiceError: string | undefined;
 
 interface OffscreenResponse {
   readonly ok: boolean;
@@ -51,6 +54,12 @@ function forwardServiceMessage(message: ServiceToExtensionMessage): void {
     return;
   }
 
+  if (message.type === "service.status") {
+    latestServiceStatus = message;
+  } else if (message.type === "service.error") {
+    latestServiceError = message.message;
+  }
+
   void chrome.tabs.sendMessage(activeSession.tabId, message).catch(() => {});
 }
 
@@ -76,6 +85,7 @@ function connectNativeHost(sessionId: string, tabId: number): chrome.runtime.Por
     }
 
     const error = chrome.runtime.lastError?.message ?? "Local service disconnected";
+    latestServiceError = error;
     void chrome.tabs.sendMessage(tabId, {
       protocolVersion: PROTOCOL_VERSION,
       type: "service.error",
@@ -109,8 +119,11 @@ async function startSession(): Promise<{ sessionId: string }> {
     target: { tabId: tab.id },
     files: ["content.js"],
   });
+  await chrome.tabs.sendMessage(tab.id, { type: "overlay.reset" }).catch(() => {});
 
   const sessionId = crypto.randomUUID();
+  latestServiceStatus = undefined;
+  latestServiceError = undefined;
   const nativePort = connectNativeHost(sessionId, tab.id);
   activeSession = { sessionId, tabId: tab.id, nativePort };
 
@@ -158,6 +171,8 @@ async function stopSession(reason: StopSessionMessage["reason"] = "user"): Promi
   if (!session) {
     await ensureOffscreenDocument();
     await stopOffscreenCapture().catch(() => {});
+    latestServiceStatus = undefined;
+    latestServiceError = undefined;
     return;
   }
 
@@ -175,6 +190,8 @@ async function stopSession(reason: StopSessionMessage["reason"] = "user"): Promi
   }
   session.nativePort.disconnect();
   await chrome.tabs.sendMessage(session.tabId, { type: "overlay.stop" }).catch(() => {});
+  latestServiceStatus = undefined;
+  latestServiceError = undefined;
 }
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
@@ -237,6 +254,11 @@ chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     sendResponse({
       active: activeSession !== undefined,
       sessionId: activeSession?.sessionId,
+      serviceStatus: latestServiceStatus?.status,
+      queueDelayMs: latestServiceStatus?.queueDelayMs,
+      activeSttModel: latestServiceStatus?.activeSttModel,
+      activeTranslationModel: latestServiceStatus?.activeTranslationModel,
+      error: latestServiceError,
     });
   }
   return false;
