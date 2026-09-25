@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Live Translate Subtitles — local audio test</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: system-ui, sans-serif;
+        background: #111827;
+        color: #f9fafb;
+      }
+      body {
+        display: grid;
+        min-height: 100vh;
+        margin: 0;
+        place-items: center;
+      }
+      main {
+        width: min(680px, calc(100% - 48px));
+        padding: 32px;
+        border: 1px solid #374151;
+        border-radius: 20px;
+        background: #1f2937;
+        box-shadow: 0 24px 64px rgb(0 0 0 / 35%);
+      }
+      h1 {
+        margin-top: 0;
+      }
+      audio {
+        width: 100%;
+        margin: 20px 0;
+      }
+      code {
+        color: #93c5fd;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Local STT smoke test</h1>
+      <p>Start the extension, then play this generated English speech twice.</p>
+      <audio controls loop src="english-test.wav"></audio>
+      <p>Expected speech:</p>
+      <code>Hello, this is a local real-time subtitle test. The browser audio stays on this computer.</code>
+    </main>
+  </body>
+</html>

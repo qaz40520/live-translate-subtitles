@@ -30,3 +30,5 @@ Thumbs.db
 !.env.example
 *.log
 
+# Generated manual-test media
+apps/extension/manual-test/*.wav

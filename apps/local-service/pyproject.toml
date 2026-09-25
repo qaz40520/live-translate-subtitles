@@ -19,6 +19,7 @@ stt = [
 ]
 translation = [
   "opencc-python-reimplemented>=0.1.7,<1",
+  "torch>=2.6,<3",
   "sentencepiece>=0.2,<1",
   "transformers>=4.46,<6"
 ]
@@ -28,6 +29,7 @@ models = [
   "nvidia-cublas-cu12>=12.4,<13; platform_system == 'Windows'",
   "nvidia-cudnn-cu12>=9,<10; platform_system == 'Windows'",
   "opencc-python-reimplemented>=0.1.7,<1",
+  "torch>=2.6,<3",
   "sentencepiece>=0.2,<1",
   "transformers>=4.46,<6"
 ]
@@ -57,3 +59,4 @@ strict = true
 [project.scripts]
 live-translate-native-host = "live_translate_subtitles.main:main"
 live-translate-download-stt = "live_translate_subtitles.download_model:main"
+live-translate-download-translation = "live_translate_subtitles.download_translation_model:main"

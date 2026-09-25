@@ -12,15 +12,15 @@
 - [x] Capture Chrome tab audio after an explicit click.
 - [x] Stream canonical PCM chunks to the native service.
 - [x] Add a guarded Faster Whisper adapter and detect the RTX 3070 CUDA runtime.
-- [ ] Download the selected Whisper model after explicit developer consent.
-- [ ] Run Faster Whisper on recorded tab audio using the RTX 3070 reference machine.
+- [x] Download the selected Whisper model after explicit developer consent.
+- [x] Run Faster Whisper on recorded tab audio using the RTX 3070 reference machine.
 - Measure provisional and final transcript latency for English, Japanese, and Korean.
 - Prove 30 minutes of bounded-memory operation.
 
 ## Milestone 2 — Local translation pipeline
 
-- Add NLLB adapter and OpenCC normalization.
-- Add rolling context and 800 ms translation throttling.
+- [x] Add NLLB adapter and OpenCC normalization.
+- [x] Add rolling context and 800 ms translation throttling.
 - Add adapter conformance tests.
 - Measure end-to-end latency and GPU memory.
 

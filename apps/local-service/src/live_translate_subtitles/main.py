@@ -7,6 +7,7 @@ import sys
 from typing import Any
 
 from .native_messaging import MessageWriter, NativeMessagingError, read_message
+from .nllb_engine import NllbTranslationEngine
 from .session import TranscriptionSession
 
 
@@ -38,7 +39,13 @@ def run() -> int:
                 if active is not None:
                     active.stop()
                 session_id = _required_string(message, "sessionId")
-                active = TranscriptionSession(session_id, writer.write)
+                target_language = _required_string(message, "targetLanguage")
+                active = TranscriptionSession(
+                    session_id,
+                    writer.write,
+                    translator=NllbTranslationEngine(),
+                    target_language=target_language,
+                )
                 active.start()
             elif message_type == "audio.chunk":
                 session_id = _required_string(message, "sessionId")

@@ -49,12 +49,12 @@ pnpm build
 python -m unittest discover -s apps/local-service/tests -v
 ```
 
-### Chrome audio-to-text spike
+### Chrome local subtitle spike
 
-The current milestone contains an experimental Chrome tab-audio pipeline. It
-does not yet translate text.
+The current milestone contains an experimental Chrome tab-audio pipeline with
+optional local NLLB translation.
 
-1. Create `.venv` and install `apps/local-service[stt,dev]` in editable mode.
+1. Create `.venv` and install `apps/local-service[models,dev]` in editable mode.
 2. Build with `pnpm build`.
 3. Load `apps/extension/dist/chrome` as an unpacked extension.
 4. Register the native host. The manifest key keeps the development extension
@@ -74,8 +74,19 @@ does not yet translate text.
    Development runs use the ignored repository directory `models/`. A packaged
    release uses `%LOCALAPPDATA%\LiveTranslateSubtitles\models`.
 
-Without that explicit environment variable, the service refuses network model
-downloads and reports a local model error in the subtitle overlay.
+6. For non-commercial development, review NLLB-200's CC-BY-NC-4.0 terms and
+   explicitly download the translation model:
+
+   ```powershell
+   ./.venv/Scripts/live-translate-download-translation.exe --yes
+   ```
+
+Normal service startup refuses network model downloads. Missing local models
+are reported in the subtitle overlay while the available pipeline continues.
+
+The repeatable local audio fixture is available at
+`apps/extension/manual-test/index.html`; serve the repository over localhost so
+Chrome can inject the subtitle overlay without file-URL permissions.
 
 ## Documentation
 
