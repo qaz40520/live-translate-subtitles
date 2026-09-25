@@ -57,14 +57,14 @@ does not yet translate text.
 1. Create `.venv` and install `apps/local-service[stt,dev]` in editable mode.
 2. Build with `pnpm build`.
 3. Load `apps/extension/dist/chrome` as an unpacked extension.
-4. Copy the extension ID from `chrome://extensions`.
-5. Register the native host:
+4. Register the native host. The manifest key keeps the development extension
+   ID fixed at `lkmcdfehamclallnfmcobgecooedokpm`:
 
    ```powershell
-   ./apps/local-service/scripts/register-chrome-native-host.ps1 -ExtensionId <extension-id>
+   ./apps/local-service/scripts/register-chrome-native-host.ps1 -ExtensionId lkmcdfehamclallnfmcobgecooedokpm
    ```
 
-6. Review the Whisper MIT license and expected download size, then explicitly
+5. Review the Whisper MIT license and expected download size, then explicitly
    download the development model:
 
    ```powershell

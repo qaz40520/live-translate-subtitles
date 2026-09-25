@@ -3,6 +3,7 @@
   "name": "Live Translate Subtitles",
   "version": "0.0.0",
   "description": "Local-first real-time translated subtitles for browser media.",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA3pmmPn02Hq2uw31CIEEq5++7A2en3gUMrWN347HY5K15ZTSziVFIrtqURAz1h3jaLWeNlmes9R7D9DjakBIDP3yfykl6Fu16VK2//HUQSAw37QDcMwwqX38EZEBYf/ASXWsMXqbD5ra11KQ8x7+Vd1ACmBIu3xzBydRU5gE9AsPPHCxgnpIdUN9L2PSqIqOCW1EmFICgzfaOokwmILbRmZ75p5AB6knbMKtRyCFPeIpFBxClTenrHYFj3P5qEyRA7FH0emru09nTROaYCc7OCOvoSULAcb2A5wwaVHEGnQe/1i9zgRuu3LRtTqi+0+wz2fvwR7eptcpGLEh0p2hfwQIDAQAB",
   "permissions": ["activeTab", "nativeMessaging", "offscreen", "scripting", "storage", "tabCapture"],
   "action": {
     "default_popup": "popup.html"
