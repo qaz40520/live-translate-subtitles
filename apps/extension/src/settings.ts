@@ -1,5 +1,6 @@
 export type SubtitleDisplayMode = "translated" | "bilingual";
 export type SubtitlePosition = "bottom" | "middle";
+export type SourceLanguage = "auto" | "en" | "ja" | "ko";
 
 export interface SubtitleSettings {
   readonly displayMode: SubtitleDisplayMode;
@@ -7,6 +8,7 @@ export interface SubtitleSettings {
   readonly position: SubtitlePosition;
   readonly backgroundOpacity: number;
   readonly textColor: string;
+  readonly sourceLanguage: SourceLanguage;
 }
 
 export const DEFAULT_SUBTITLE_SETTINGS: SubtitleSettings = {
@@ -15,6 +17,7 @@ export const DEFAULT_SUBTITLE_SETTINGS: SubtitleSettings = {
   position: "bottom",
   backgroundOpacity: 0.72,
   textColor: "#ffffff",
+  sourceLanguage: "ko",
 };
 
 export const SUBTITLE_SETTINGS_KEY = "subtitleSettings";
@@ -47,6 +50,12 @@ export function normalizeSubtitleSettings(value: unknown): SubtitleSettings {
       typeof candidate.textColor === "string" && /^#[0-9a-f]{6}$/i.test(candidate.textColor)
         ? candidate.textColor
         : DEFAULT_SUBTITLE_SETTINGS.textColor,
+    sourceLanguage:
+      candidate.sourceLanguage === "auto" ||
+      candidate.sourceLanguage === "en" ||
+      candidate.sourceLanguage === "ja"
+        ? candidate.sourceLanguage
+        : "ko",
   };
 }
 

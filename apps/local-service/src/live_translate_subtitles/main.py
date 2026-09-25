@@ -7,7 +7,7 @@ import sys
 from typing import Any
 
 from .native_messaging import MessageWriter, NativeMessagingError, read_message
-from .nllb_engine import NllbTranslationEngine
+from .ollama_engine import OllamaTranslationEngine
 from .session import TranscriptionSession
 
 
@@ -40,11 +40,15 @@ def run() -> int:
                     active.stop()
                 session_id = _required_string(message, "sessionId")
                 target_language = _required_string(message, "targetLanguage")
+                requested_source_language = _required_string(
+                    message, "requestedSourceLanguage"
+                )
                 active = TranscriptionSession(
                     session_id,
                     writer.write,
-                    translator=NllbTranslationEngine(),
+                    translator=OllamaTranslationEngine(),
                     target_language=target_language,
+                    requested_source_language=requested_source_language,
                 )
                 active.start()
             elif message_type == "audio.chunk":

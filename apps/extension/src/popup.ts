@@ -1,6 +1,7 @@
 import {
   loadSubtitleSettings,
   saveSubtitleSettings,
+  type SourceLanguage,
   type SubtitleDisplayMode,
   type SubtitlePosition,
   type SubtitleSettings,
@@ -25,6 +26,7 @@ const startButton = requiredElement<HTMLButtonElement>("#start");
 const stopButton = requiredElement<HTMLButtonElement>("#stop");
 const statusElement = requiredElement<HTMLElement>("#status");
 const displayMode = requiredElement<HTMLSelectElement>("#display-mode");
+const sourceLanguage = requiredElement<HTMLSelectElement>("#source-language");
 const position = requiredElement<HTMLSelectElement>("#position");
 const fontSize = requiredElement<HTMLInputElement>("#font-size");
 const fontSizeValue = requiredElement<HTMLOutputElement>("#font-size-value");
@@ -35,6 +37,7 @@ let actionError: string | undefined;
 
 function renderSettings(settings: SubtitleSettings): void {
   displayMode.value = settings.displayMode;
+  sourceLanguage.value = settings.sourceLanguage;
   position.value = settings.position;
   fontSize.value = String(settings.fontSizePx);
   fontSizeValue.value = `${settings.fontSizePx}px`;
@@ -50,6 +53,7 @@ async function persistSettings(): Promise<void> {
     fontSizePx: fontSize.valueAsNumber,
     backgroundOpacity: backgroundOpacity.valueAsNumber / 100,
     textColor: textColor.value,
+    sourceLanguage: sourceLanguage.value as SourceLanguage,
   };
   renderSettings(settings);
   await saveSubtitleSettings(settings);
@@ -99,7 +103,7 @@ stopButton.addEventListener("click", async () => {
   await refreshStatus();
 });
 
-for (const control of [displayMode, position, textColor]) {
+for (const control of [sourceLanguage, displayMode, position, textColor]) {
   control.addEventListener("change", () => void persistSettings());
 }
 for (const control of [fontSize, backgroundOpacity]) {

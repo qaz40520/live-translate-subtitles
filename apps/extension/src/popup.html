@@ -32,7 +32,16 @@
         <button id="stop" type="button" disabled>停止</button>
       </div>
       <fieldset>
-        <legend>字幕外觀（變更會立即套用）</legend>
+        <legend>辨識與字幕（變更會立即套用）</legend>
+        <label>
+          語音語言
+          <select id="source-language">
+            <option value="ko">韓文</option>
+            <option value="ja">日文</option>
+            <option value="en">英文</option>
+            <option value="auto">自動偵測</option>
+          </select>
+        </label>
         <label>
           顯示內容
           <select id="display-mode">

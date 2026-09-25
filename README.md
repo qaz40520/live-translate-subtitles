@@ -2,7 +2,7 @@
 
 Local-first, real-time translated subtitles for browser video and live streams.
 
-> Status: architecture scaffold. Audio capture, speech recognition, and translation are not implemented yet.
+> Status: working Chrome alpha with local tab capture, speech recognition, and translation.
 
 ## Goals
 
@@ -15,7 +15,7 @@ Local-first, real-time translated subtitles for browser video and live streams.
 ## Planned default stack
 
 - Speech-to-text: `faster-whisper` with `whisper-large-v3-turbo`
-- Translation for the non-commercial alpha: `NLLB-200-distilled-600M`
+- Translation: `TranslateGemma 4B` through the local Ollama runtime
 - Traditional Chinese normalization: OpenCC with Taiwan terminology
 - Extension: TypeScript, shared Chrome/Firefox code
 - Local service: Python, packaged as a Windows executable
@@ -52,7 +52,7 @@ python -m unittest discover -s apps/local-service/tests -v
 ### Chrome local subtitle spike
 
 The current milestone contains an experimental Chrome tab-audio pipeline with
-optional local NLLB translation.
+local TranslateGemma translation. The NLLB adapter remains available for model experiments.
 
 1. Create `.venv` and install `apps/local-service[models,dev]` in editable mode.
 2. Build with `pnpm build`.
@@ -74,11 +74,10 @@ optional local NLLB translation.
    Development runs use the ignored repository directory `models/`. A packaged
    release uses `%LOCALAPPDATA%\LiveTranslateSubtitles\models`.
 
-6. For non-commercial development, review NLLB-200's CC-BY-NC-4.0 terms and
-   explicitly download the translation model:
+6. Review the Gemma usage terms, install Ollama, and download TranslateGemma 4B:
 
    ```powershell
-   ./.venv/Scripts/live-translate-download-translation.exe --yes
+   ollama pull translategemma:4b
    ```
 
 Normal service startup refuses network model downloads. Missing local models

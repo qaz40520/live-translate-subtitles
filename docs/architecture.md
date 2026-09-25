@@ -38,7 +38,8 @@ risk rather than an assumption.
 - Starts on demand through Native Messaging and exits after the session becomes idle.
 - Performs voice activity detection, speech recognition, translation, normalization, and timing.
 - Selects GPU or CPU execution based on detected capabilities.
-- Never exposes a network listener in the MVP.
+- Uses only Ollama's loopback API for local TranslateGemma inference; it does not send
+  subtitle content to a remote service.
 - Never writes audio or subtitle text to disk unless executing an explicit export operation.
 
 ### Shared protocol
@@ -62,7 +63,8 @@ TranslationEngine
   unload()
 ```
 
-The alpha adapters are Faster Whisper and NLLB. Future TranslateGemma or MADLAD adapters must satisfy the same contract and shared conformance tests.
+The alpha adapters are Faster Whisper and TranslateGemma through Ollama. NLLB remains
+available as a replaceable fallback adapter, and future engines must satisfy the same contract.
 
 ## Streaming rules
 

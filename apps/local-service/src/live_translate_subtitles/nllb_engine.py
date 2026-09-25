@@ -30,6 +30,7 @@ class NllbTranslationEngine:
 
     def __init__(self, model_name: str = DEFAULT_MODEL) -> None:
         self._model_name = model_name
+        self.model_name = model_name
         self._translator: Any | None = None
         self._tokenizer: Any | None = None
         self._normalizer: Any | None = None

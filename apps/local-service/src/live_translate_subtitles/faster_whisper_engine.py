@@ -61,10 +61,11 @@ def default_model_root() -> Path:
 
 
 class FasterWhisperEngine:
-    def __init__(self, model_name: str = "large-v3-turbo") -> None:
+    def __init__(self, model_name: str = "large-v3-turbo", language: str | None = None) -> None:
         self._model_name = model_name
         self._model: object | None = None
-        self._language: str | None = None
+        self._configured_language = language
+        self._language = language
         self.last_latency_ms = 0
 
     async def load(self) -> None:
@@ -133,11 +134,11 @@ class FasterWhisperEngine:
         )
 
     async def reset(self) -> None:
-        self._language = None
+        self._language = self._configured_language
 
     async def unload(self) -> None:
         self._model = None
-        self._language = None
+        self._language = self._configured_language
 
 
 def _is_final_utterance(text: str, audio_duration_seconds: float, end_seconds: float) -> bool:

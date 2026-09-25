@@ -51,10 +51,12 @@ class TranscriptionSession:
         engine: StreamingSpeechToTextEngine | None = None,
         translator: TranslationEngine | None = None,
         target_language: str = "zh-TW",
+        requested_source_language: str = "auto",
     ) -> None:
         self._session_id = session_id
         self._emit = emit
-        self._engine = engine or FasterWhisperEngine()
+        source_language = None if requested_source_language == "auto" else requested_source_language
+        self._engine = engine or FasterWhisperEngine(language=source_language)
         self._translator = translator
         self._target_language = target_language
         self._translation_context: list[str] = []
@@ -244,7 +246,9 @@ class TranscriptionSession:
             "activeSttModel": "large-v3-turbo",
         }
         if self._translator is not None:
-            message["activeTranslationModel"] = "nllb-200-distilled-600M"
+            message["activeTranslationModel"] = str(
+                getattr(self._translator, "model_name", "local-translation")
+            )
         self._emit(message)
 
 

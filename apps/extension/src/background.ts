@@ -6,6 +6,7 @@ import {
   type StartSessionMessage,
   type StopSessionMessage,
 } from "@lts/protocol";
+import { loadSubtitleSettings } from "./settings";
 
 const NATIVE_HOST = "com.livetranslatesubtitles.service";
 const OFFSCREEN_DOCUMENT_PATH = "offscreen.html";
@@ -109,6 +110,7 @@ async function startSession(): Promise<{ sessionId: string }> {
   if (tab?.id === undefined) {
     throw new Error("No active browser tab is available");
   }
+  const settings = await loadSubtitleSettings();
 
   await ensureOffscreenDocument();
   // Clear a stream left behind by a crashed native host before requesting a
@@ -132,7 +134,7 @@ async function startSession(): Promise<{ sessionId: string }> {
       protocolVersion: PROTOCOL_VERSION,
       type: "session.start",
       sessionId,
-      requestedSourceLanguage: "auto",
+      requestedSourceLanguage: settings.sourceLanguage,
       targetLanguage: "zh-TW",
     } satisfies StartSessionMessage);
 

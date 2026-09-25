@@ -7,7 +7,7 @@ export interface StartSessionMessage {
   readonly type: "session.start";
   readonly sessionId: SessionId;
   readonly targetLanguage: "zh-TW";
-  readonly requestedSourceLanguage: "auto" | string;
+  readonly requestedSourceLanguage: "auto" | "en" | "ja" | "ko";
 }
 
 export interface StopSessionMessage {
