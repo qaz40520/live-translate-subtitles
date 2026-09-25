@@ -45,40 +45,57 @@ async function startCapture(sessionId: string, streamId: string): Promise<void> 
       chromeMediaSourceId: streamId,
     },
   };
-  const stream = await navigator.mediaDevices.getUserMedia({
-    audio: chromeAudioConstraints as unknown as MediaTrackConstraints,
-    video: false,
-  });
-  const captureContext = new AudioContext({ sampleRate: TARGET_SAMPLE_RATE });
-  if (captureContext.sampleRate !== TARGET_SAMPLE_RATE) {
-    await captureContext.close();
-    throw new Error(
-      `Browser created a ${captureContext.sampleRate} Hz audio context; 16000 Hz is required`,
-    );
-  }
-  await captureContext.audioWorklet.addModule("audio-worklet.js");
+  let stream: MediaStream | undefined;
+  let captureContext: AudioContext | undefined;
+  let playbackContext: AudioContext | undefined;
+  let worklet: AudioWorkletNode | undefined;
 
-  const captureSource = captureContext.createMediaStreamSource(stream);
-  const worklet = new AudioWorkletNode(captureContext, "pcm-capture-processor");
-  const silentOutput = captureContext.createGain();
-  silentOutput.gain.value = 0;
-  captureSource.connect(worklet).connect(silentOutput).connect(captureContext.destination);
-
-  const playbackContext = new AudioContext();
-  playbackContext.createMediaStreamSource(stream).connect(playbackContext.destination);
-
-  worklet.port.onmessage = (event: MessageEvent<ArrayBuffer>) => {
-    void chrome.runtime.sendMessage({
-      type: "capture.audio",
-      sessionId,
-      sequence,
-      capturedAtMs: Date.now(),
-      audioBase64: bytesToBase64(event.data),
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      audio: chromeAudioConstraints as unknown as MediaTrackConstraints,
+      video: false,
     });
-    sequence += 1;
-  };
+    captureContext = new AudioContext({ sampleRate: TARGET_SAMPLE_RATE });
+    if (captureContext.sampleRate !== TARGET_SAMPLE_RATE) {
+      throw new Error(
+        `Browser created a ${captureContext.sampleRate} Hz audio context; 16000 Hz is required`,
+      );
+    }
+    await captureContext.audioWorklet.addModule("audio-worklet.js");
 
-  captureState = { sessionId, stream, captureContext, playbackContext, worklet };
+    const captureSource = captureContext.createMediaStreamSource(stream);
+    worklet = new AudioWorkletNode(captureContext, "pcm-capture-processor");
+    const silentOutput = captureContext.createGain();
+    silentOutput.gain.value = 0;
+    captureSource.connect(worklet).connect(silentOutput).connect(captureContext.destination);
+
+    playbackContext = new AudioContext();
+    playbackContext.createMediaStreamSource(stream).connect(playbackContext.destination);
+
+    worklet.port.onmessage = (event: MessageEvent<ArrayBuffer>) => {
+      void chrome.runtime.sendMessage({
+        type: "capture.audio",
+        sessionId,
+        sequence,
+        capturedAtMs: Date.now(),
+        audioBase64: bytesToBase64(event.data),
+      });
+      sequence += 1;
+    };
+
+    captureState = { sessionId, stream, captureContext, playbackContext, worklet };
+  } catch (error) {
+    worklet?.disconnect();
+    for (const track of stream?.getTracks() ?? []) {
+      track.stop();
+    }
+    await Promise.allSettled(
+      [captureContext, playbackContext]
+        .filter((context): context is AudioContext => context !== undefined)
+        .map((context) => context.close()),
+    );
+    throw error;
+  }
 }
 
 chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {

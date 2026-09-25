@@ -20,7 +20,7 @@ startButton.addEventListener("click", async () => {
 stopButton.addEventListener("click", async () => {
   stopButton.disabled = true;
   await chrome.runtime.sendMessage({ type: "ui.stop" });
-  statusElement.textContent = "Stopped";
+  statusElement.textContent = "Stopped — audio capture cleared";
   startButton.disabled = false;
   stopButton.disabled = false;
 });
