@@ -81,23 +81,31 @@ async function startCapture(sessionId: string, streamId: string): Promise<void> 
   captureState = { sessionId, stream, captureContext, playbackContext, worklet };
 }
 
-chrome.runtime.onMessage.addListener((message) => {
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
   if (message?.target !== "offscreen") {
     return false;
   }
 
   if (message.type === "capture.start") {
-    void startCapture(String(message.sessionId), String(message.streamId)).catch(
-      (error: unknown) => {
-        void chrome.runtime.sendMessage({
-          type: "capture.error",
-          sessionId: message.sessionId,
+    void startCapture(String(message.sessionId), String(message.streamId))
+      .then(() => sendResponse({ ok: true }))
+      .catch((error: unknown) =>
+        sendResponse({
+          ok: false,
           error: error instanceof Error ? error.message : String(error),
-        });
-      },
-    );
+        }),
+      );
+    return true;
   } else if (message.type === "capture.stop") {
-    void stopCapture();
+    void stopCapture()
+      .then(() => sendResponse({ ok: true }))
+      .catch((error: unknown) =>
+        sendResponse({
+          ok: false,
+          error: error instanceof Error ? error.message : String(error),
+        }),
+      );
+    return true;
   }
   return false;
 });

@@ -18,6 +18,11 @@ interface ActiveSession {
 let activeSession: ActiveSession | undefined;
 let creatingOffscreenDocument: Promise<void> | undefined;
 
+interface OffscreenResponse {
+  readonly ok: boolean;
+  readonly error?: string;
+}
+
 async function ensureOffscreenDocument(): Promise<void> {
   const offscreenUrl = chrome.runtime.getURL(OFFSCREEN_DOCUMENT_PATH);
   const contexts = await chrome.runtime.getContexts({
@@ -49,6 +54,17 @@ function forwardServiceMessage(message: ServiceToExtensionMessage): void {
   void chrome.tabs.sendMessage(activeSession.tabId, message).catch(() => {});
 }
 
+async function stopOffscreenCapture(sessionId?: string): Promise<void> {
+  const response = (await chrome.runtime.sendMessage({
+    type: "capture.stop",
+    target: "offscreen",
+    sessionId,
+  })) as OffscreenResponse | undefined;
+  if (response && !response.ok) {
+    throw new Error(response.error ?? "Unable to stop tab audio capture");
+  }
+}
+
 function connectNativeHost(sessionId: string, tabId: number): chrome.runtime.Port {
   const port = chrome.runtime.connectNative(NATIVE_HOST);
   port.onMessage.addListener((message: ServiceToExtensionMessage) => {
@@ -69,6 +85,7 @@ function connectNativeHost(sessionId: string, tabId: number): chrome.runtime.Por
       recoverable: true,
     } satisfies ServiceToExtensionMessage);
     activeSession = undefined;
+    void stopOffscreenCapture(sessionId).catch(() => {});
   });
   return port;
 }
@@ -83,8 +100,11 @@ async function startSession(): Promise<{ sessionId: string }> {
     throw new Error("No active browser tab is available");
   }
 
-  const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tab.id });
   await ensureOffscreenDocument();
+  // Clear a stream left behind by a crashed native host before requesting a
+  // new tab-capture token. The offscreen response resolves after tracks close.
+  await stopOffscreenCapture();
+  const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tab.id });
   await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     files: ["content.js"],
@@ -94,20 +114,41 @@ async function startSession(): Promise<{ sessionId: string }> {
   const nativePort = connectNativeHost(sessionId, tab.id);
   activeSession = { sessionId, tabId: tab.id, nativePort };
 
-  nativePort.postMessage({
-    protocolVersion: PROTOCOL_VERSION,
-    type: "session.start",
-    sessionId,
-    requestedSourceLanguage: "auto",
-    targetLanguage: "zh-TW",
-  } satisfies StartSessionMessage);
+  try {
+    nativePort.postMessage({
+      protocolVersion: PROTOCOL_VERSION,
+      type: "session.start",
+      sessionId,
+      requestedSourceLanguage: "auto",
+      targetLanguage: "zh-TW",
+    } satisfies StartSessionMessage);
 
-  await chrome.runtime.sendMessage({
-    type: "capture.start",
-    target: "offscreen",
-    sessionId,
-    streamId,
-  });
+    const response = (await chrome.runtime.sendMessage({
+      type: "capture.start",
+      target: "offscreen",
+      sessionId,
+      streamId,
+    })) as OffscreenResponse | undefined;
+    if (!response?.ok) {
+      throw new Error(response?.error ?? "Unable to start tab audio capture");
+    }
+  } catch (error) {
+    activeSession = undefined;
+    await stopOffscreenCapture(sessionId).catch(() => {});
+    try {
+      nativePort.postMessage({
+        protocolVersion: PROTOCOL_VERSION,
+        type: "session.stop",
+        sessionId,
+        reason: "capture-error",
+      } satisfies StopSessionMessage);
+    } catch {
+      // The native host may already be disconnected.
+    }
+    nativePort.disconnect();
+    await chrome.tabs.sendMessage(tab.id, { type: "overlay.stop" }).catch(() => {});
+    throw error;
+  }
 
   return { sessionId };
 }
@@ -115,21 +156,23 @@ async function startSession(): Promise<{ sessionId: string }> {
 async function stopSession(reason: StopSessionMessage["reason"] = "user"): Promise<void> {
   const session = activeSession;
   if (!session) {
+    await ensureOffscreenDocument();
+    await stopOffscreenCapture().catch(() => {});
     return;
   }
 
   activeSession = undefined;
-  await chrome.runtime.sendMessage({
-    type: "capture.stop",
-    target: "offscreen",
-    sessionId: session.sessionId,
-  });
-  session.nativePort.postMessage({
-    protocolVersion: PROTOCOL_VERSION,
-    type: "session.stop",
-    sessionId: session.sessionId,
-    reason,
-  } satisfies StopSessionMessage);
+  await stopOffscreenCapture(session.sessionId).catch(() => {});
+  try {
+    session.nativePort.postMessage({
+      protocolVersion: PROTOCOL_VERSION,
+      type: "session.stop",
+      sessionId: session.sessionId,
+      reason,
+    } satisfies StopSessionMessage);
+  } catch {
+    // Cleanup still succeeds when the native host has already disconnected.
+  }
   session.nativePort.disconnect();
   await chrome.tabs.sendMessage(session.tabId, { type: "overlay.stop" }).catch(() => {});
 }
