@@ -16,9 +16,10 @@ from live_translate_subtitles.session import TranscriptionSession
 
 
 class FakeEngine:
-    def __init__(self) -> None:
+    def __init__(self, *, is_final: bool = False) -> None:
         self.last_latency_ms = 12
         self.loaded = False
+        self.is_final = is_final
 
     async def load(self) -> None:
         self.loaded = True
@@ -31,7 +32,7 @@ class FakeEngine:
                 text=f"received {len(pcm_s16le)} bytes",
                 start_time_ms=0,
                 end_time_ms=2400,
-                is_final=False,
+                is_final=self.is_final,
             ),
         )
 
@@ -93,7 +94,7 @@ class SessionTests(unittest.TestCase):
         session = TranscriptionSession(
             "session-2",
             emitted.append,
-            FakeEngine(),
+            FakeEngine(is_final=True),
             translator=translator,
         )
         session.start()
@@ -118,6 +119,36 @@ class SessionTests(unittest.TestCase):
         updates = [message for message in emitted if message.get("type") == "subtitle.update"]
         self.assertEqual(updates[0]["translatedText"], "translated: received 76800 bytes")
         self.assertFalse(translator.loaded)
+
+    def test_provisional_text_is_not_translated(self) -> None:
+        emitted: list[dict[str, object]] = []
+        session = TranscriptionSession(
+            "session-3",
+            emitted.append,
+            FakeEngine(is_final=False),
+            translator=FakeTranslator(),
+        )
+        session.start()
+
+        chunk = base64.b64encode(bytes(25600)).decode("ascii")
+        for sequence in range(3):
+            session.submit_base64(
+                {
+                    "sequence": sequence,
+                    "capturedAtMs": sequence * 800,
+                    "audioBase64": chunk,
+                }
+            )
+
+        deadline = time.monotonic() + 2
+        while time.monotonic() < deadline:
+            if any(message.get("type") == "subtitle.update" for message in emitted):
+                break
+            time.sleep(0.01)
+
+        session.stop()
+        updates = [message for message in emitted if message.get("type") == "subtitle.update"]
+        self.assertEqual(updates[0]["translatedText"], "")
 
 
 if __name__ == "__main__":

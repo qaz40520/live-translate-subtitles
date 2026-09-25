@@ -69,7 +69,11 @@ chrome.runtime.onMessage.addListener((message: ContentMessage) => {
     const translation = root.querySelector<HTMLElement>(`#${TRANSLATION_ID}`);
     if (source && translation) {
       source.textContent = message.sourceText;
-      translation.textContent = message.translatedText || "Transcribing locally…";
+      if (message.translatedText) {
+        translation.textContent = message.translatedText;
+      } else if (!translation.textContent) {
+        translation.textContent = "Waiting for a complete sentence…";
+      }
       root.style.opacity = message.isFinal ? "1" : "0.82";
       root.hidden = false;
     }

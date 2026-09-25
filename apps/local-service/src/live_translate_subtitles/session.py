@@ -180,10 +180,12 @@ class TranscriptionSession:
                     }
                 )
                 update_sequence += 1
+            if any(segment.is_final for segment in segments):
+                rolling.clear()
             self._emit_status("busy", self._engine.last_latency_ms)
 
     async def _translate(self, segment: TranscriptSegment) -> str:
-        if self._translator is None:
+        if self._translator is None or not segment.is_final:
             return ""
         wait_seconds = TRANSLATION_THROTTLE_SECONDS - (monotonic() - self._last_translation_at)
         if wait_seconds > 0:

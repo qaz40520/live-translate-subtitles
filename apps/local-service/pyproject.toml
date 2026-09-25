@@ -18,8 +18,8 @@ stt = [
   "nvidia-cudnn-cu12>=9,<10; platform_system == 'Windows'"
 ]
 translation = [
+  "ctranslate2>=4,<5",
   "opencc-python-reimplemented>=0.1.7,<1",
-  "torch>=2.6,<3",
   "sentencepiece>=0.2,<1",
   "transformers>=4.46,<6"
 ]

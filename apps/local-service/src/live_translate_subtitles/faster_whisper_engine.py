@@ -14,6 +14,8 @@ from .contracts import TranscriptSegment
 
 _DLL_DIRECTORY_HANDLES: list[object] = []
 _CUDA_DLL_HANDLES: list[object] = []
+FINAL_SILENCE_SECONDS = 0.8
+PUNCTUATED_SILENCE_SECONDS = 0.35
 
 
 def configure_windows_cuda_dlls() -> None:
@@ -118,6 +120,7 @@ class FasterWhisperEngine:
 
         start_seconds = min(float(segment.start) for segment in materialized)
         end_seconds = max(float(segment.end) for segment in materialized)
+        audio_duration_seconds = len(audio) / 16000
         return (
             TranscriptSegment(
                 segment_id="live",
@@ -125,7 +128,7 @@ class FasterWhisperEngine:
                 text=text,
                 start_time_ms=round(start_seconds * 1000),
                 end_time_ms=round(end_seconds * 1000),
-                is_final=False,
+                is_final=_is_final_utterance(text, audio_duration_seconds, end_seconds),
             ),
         )
 
@@ -135,3 +138,12 @@ class FasterWhisperEngine:
     async def unload(self) -> None:
         self._model = None
         self._language = None
+
+
+def _is_final_utterance(text: str, audio_duration_seconds: float, end_seconds: float) -> bool:
+    trailing_silence = max(0.0, audio_duration_seconds - end_seconds)
+    if trailing_silence >= FINAL_SILENCE_SECONDS:
+        return True
+    return trailing_silence >= PUNCTUATED_SILENCE_SECONDS and text.rstrip().endswith(
+        (".", "?", "!", "。", "？", "！")  # noqa: RUF001 - CJK punctuation is intentional
+    )

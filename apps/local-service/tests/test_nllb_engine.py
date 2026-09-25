@@ -13,7 +13,7 @@ class NllbEngineTests(unittest.TestCase):
         self.assertEqual(_language_code("en"), "eng_Latn")
         self.assertEqual(_language_code("ja"), "jpn_Jpan")
         self.assertEqual(_language_code("ko"), "kor_Hang")
-        self.assertEqual(_language_code("zh-TW"), "zho_Hant")
+        self.assertEqual(_language_code("zh-TW"), "zho_Hans")
 
     def test_rejects_an_unmapped_language(self) -> None:
         with self.assertRaisesRegex(ValueError, "Unsupported translation language"):
