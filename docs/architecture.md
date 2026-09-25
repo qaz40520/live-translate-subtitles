@@ -27,11 +27,12 @@ flowchart LR
 - Receives status, provisional transcripts, confirmed transcripts, and translated subtitles.
 - Contains thin browser-specific adapters for Chrome and Firefox.
 
-Chrome's capture adapter uses `tabCapture`. Firefox does not expose the same
-extension API, so its adapter must use Firefox-supported display/tab media
-capture with an explicit browser selection prompt. The protocol and local
-model pipeline remain shared; browser capture parity is a tracked delivery
-risk rather than an assumption.
+Chrome's capture adapter uses `tabCapture`. Firefox does not expose tab or
+system audio capture to WebExtensions, so the Windows Firefox adapter asks the
+native service to capture the default output device with WASAPI loopback. This
+captures the system mix rather than an isolated browser tab; the UI must make
+that privacy boundary clear before a packaged release. The protocol and local
+model pipeline remain shared.
 
 ### Local service
 
@@ -41,6 +42,8 @@ risk rather than an assumption.
 - Uses only Ollama's loopback API for local TranslateGemma inference; it does not send
   subtitle content to a remote service.
 - Never writes audio or subtitle text to disk unless executing an explicit export operation.
+- On Firefox for Windows, captures the default system output because Firefox has no
+  WebExtension tab-audio API; other applications must be muted for isolated subtitles.
 
 ### Shared protocol
 

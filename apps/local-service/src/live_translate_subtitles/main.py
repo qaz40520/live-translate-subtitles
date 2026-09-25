@@ -9,6 +9,7 @@ from typing import Any
 from .native_messaging import MessageWriter, NativeMessagingError, read_message
 from .ollama_engine import OllamaTranslationEngine
 from .session import TranscriptionSession
+from .system_audio import SystemAudioCapture
 
 
 def _configure_binary_stdio() -> None:
@@ -25,6 +26,7 @@ def run() -> int:
     reader = sys.stdin.buffer
     writer = MessageWriter(sys.stdout.buffer)
     active: TranscriptionSession | None = None
+    capture: SystemAudioCapture | None = None
 
     try:
         while True:
@@ -36,6 +38,9 @@ def run() -> int:
 
             message_type = message.get("type")
             if message_type == "session.start":
+                if capture is not None:
+                    capture.stop()
+                    capture = None
                 if active is not None:
                     active.stop()
                 session_id = _required_string(message, "sessionId")
@@ -43,6 +48,7 @@ def run() -> int:
                 requested_source_language = _required_string(
                     message, "requestedSourceLanguage"
                 )
+                capture_mode = _optional_string(message, "captureMode", "browser")
                 active = TranscriptionSession(
                     session_id,
                     writer.write,
@@ -51,11 +57,23 @@ def run() -> int:
                     requested_source_language=requested_source_language,
                 )
                 active.start()
+                if capture_mode == "system":
+                    capture = SystemAudioCapture(
+                        active.submit_pcm_s16le,
+                        writer.write,
+                        session_id,
+                    )
+                    capture.start()
+                elif capture_mode != "browser":
+                    raise NativeMessagingError(f"Unsupported capture mode: {capture_mode!r}")
             elif message_type == "audio.chunk":
                 session_id = _required_string(message, "sessionId")
                 if active is not None and active.session_id == session_id:
                     active.submit_base64(message)
             elif message_type == "session.stop":
+                if capture is not None:
+                    capture.stop()
+                    capture = None
                 if active is not None:
                     active.stop()
                     active = None
@@ -65,6 +83,8 @@ def run() -> int:
         print(f"Native messaging error: {error}", file=sys.stderr)
         return 2
     finally:
+        if capture is not None:
+            capture.stop()
         if active is not None:
             active.stop()
     return 0
@@ -72,6 +92,13 @@ def run() -> int:
 
 def _required_string(message: dict[str, Any], key: str) -> str:
     value = message.get(key)
+    if not isinstance(value, str) or not value:
+        raise NativeMessagingError(f"{key} must be a non-empty string")
+    return value
+
+
+def _optional_string(message: dict[str, Any], key: str, default: str) -> str:
+    value = message.get(key, default)
     if not isinstance(value, str) or not value:
         raise NativeMessagingError(f"{key} must be a non-empty string")
     return value

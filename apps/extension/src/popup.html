@@ -8,6 +8,7 @@
       main { padding: 16px; }
       h1 { margin: 0 0 8px; font-size: 18px; }
       #status { min-height: 36px; margin: 0 0 12px; color: #bfdbfe; font-size: 13px; line-height: 1.4; }
+      #system-audio-notice { margin: 0 0 12px; padding: 8px; border-radius: 6px; background: #422006; color: #fde68a; font-size: 12px; line-height: 1.4; }
       .actions { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
       button { border: 0; border-radius: 7px; padding: 9px 12px; font-weight: 650; cursor: pointer; }
       button:disabled { cursor: default; opacity: .45; }
@@ -27,6 +28,9 @@
     <main>
       <h1>即時翻譯字幕</h1>
       <p id="status">準備就緒</p>
+      <p id="system-audio-notice" hidden>
+        Firefox 測試模式會擷取 Windows 當下播放的所有聲音；測試時請將其他應用程式靜音。
+      </p>
       <div class="actions">
         <button id="start" type="button">開始翻譯</button>
         <button id="stop" type="button" disabled>停止</button>

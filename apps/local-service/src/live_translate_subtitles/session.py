@@ -78,10 +78,17 @@ class TranscriptionSession:
         encoded = message.get("audioBase64")
         if not isinstance(encoded, str):
             raise TypeError("audioBase64 must be a string")
-        chunk = AudioChunk(
+        self.submit_pcm_s16le(
+            base64.b64decode(encoded, validate=True),
             sequence=_required_int(message, "sequence"),
             captured_at_ms=_required_int(message, "capturedAtMs"),
-            pcm_s16le=base64.b64decode(encoded, validate=True),
+        )
+
+    def submit_pcm_s16le(self, pcm_s16le: bytes, *, sequence: int, captured_at_ms: int) -> None:
+        chunk = AudioChunk(
+            sequence=sequence,
+            captured_at_ms=captured_at_ms,
+            pcm_s16le=pcm_s16le,
         )
         try:
             self._queue.put_nowait(chunk)

@@ -8,6 +8,7 @@ export interface StartSessionMessage {
   readonly sessionId: SessionId;
   readonly targetLanguage: "zh-TW";
   readonly requestedSourceLanguage: "auto" | "en" | "ja" | "ko";
+  readonly captureMode: "browser" | "system";
 }
 
 export interface StopSessionMessage {

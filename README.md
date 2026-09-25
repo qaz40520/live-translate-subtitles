@@ -87,6 +87,26 @@ The repeatable local audio fixture is available at
 `apps/extension/manual-test/index.html`; serve the repository over localhost so
 Chrome can inject the subtitle overlay without file-URL permissions.
 
+### Firefox development build
+
+Firefox does not expose tab-audio capture to WebExtensions. On Windows, the
+Firefox build therefore captures the default system output through WASAPI
+loopback. This includes audio from other applications playing at the same time.
+
+1. Build the extension and register the Firefox native host:
+
+   ```powershell
+   pnpm build
+   ./apps/local-service/scripts/register-firefox-native-host.ps1
+   ```
+
+2. Open `about:debugging#/runtime/this-firefox`, choose **Load Temporary Add-on**,
+   and select `apps/extension/dist/firefox/manifest.json`.
+3. Open the media tab, choose the source language, and start translation.
+
+Temporary add-ons are removed when Firefox exits and must be loaded again for
+the next development session.
+
 ## Documentation
 
 - [Product specification](docs/product-spec.md)

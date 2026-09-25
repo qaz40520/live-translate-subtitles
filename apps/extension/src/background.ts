@@ -10,6 +10,8 @@ import { loadSubtitleSettings } from "./settings";
 
 const NATIVE_HOST = "com.livetranslatesubtitles.service";
 const OFFSCREEN_DOCUMENT_PATH = "offscreen.html";
+declare const __TARGET_BROWSER__: "chrome" | "firefox";
+const usesSystemAudioCapture = __TARGET_BROWSER__ === "firefox";
 
 interface ActiveSession {
   readonly sessionId: string;
@@ -65,6 +67,9 @@ function forwardServiceMessage(message: ServiceToExtensionMessage): void {
 }
 
 async function stopOffscreenCapture(sessionId?: string): Promise<void> {
+  if (usesSystemAudioCapture) {
+    return;
+  }
   const response = (await chrome.runtime.sendMessage({
     type: "capture.stop",
     target: "offscreen",
@@ -112,11 +117,14 @@ async function startSession(): Promise<{ sessionId: string }> {
   }
   const settings = await loadSubtitleSettings();
 
-  await ensureOffscreenDocument();
-  // Clear a stream left behind by a crashed native host before requesting a
-  // new tab-capture token. The offscreen response resolves after tracks close.
-  await stopOffscreenCapture();
-  const streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tab.id });
+  let streamId: string | undefined;
+  if (!usesSystemAudioCapture) {
+    await ensureOffscreenDocument();
+    // Clear a stream left behind by a crashed native host before requesting a
+    // new tab-capture token. The offscreen response resolves after tracks close.
+    await stopOffscreenCapture();
+    streamId = await chrome.tabCapture.getMediaStreamId({ targetTabId: tab.id });
+  }
   await chrome.scripting.executeScript({
     target: { tabId: tab.id },
     files: ["content.js"],
@@ -136,16 +144,19 @@ async function startSession(): Promise<{ sessionId: string }> {
       sessionId,
       requestedSourceLanguage: settings.sourceLanguage,
       targetLanguage: "zh-TW",
+      captureMode: usesSystemAudioCapture ? "system" : "browser",
     } satisfies StartSessionMessage);
 
-    const response = (await chrome.runtime.sendMessage({
-      type: "capture.start",
-      target: "offscreen",
-      sessionId,
-      streamId,
-    })) as OffscreenResponse | undefined;
-    if (!response?.ok) {
-      throw new Error(response?.error ?? "Unable to start tab audio capture");
+    if (!usesSystemAudioCapture) {
+      const response = (await chrome.runtime.sendMessage({
+        type: "capture.start",
+        target: "offscreen",
+        sessionId,
+        streamId,
+      })) as OffscreenResponse | undefined;
+      if (!response?.ok) {
+        throw new Error(response?.error ?? "Unable to start tab audio capture");
+      }
     }
   } catch (error) {
     activeSession = undefined;
@@ -171,8 +182,10 @@ async function startSession(): Promise<{ sessionId: string }> {
 async function stopSession(reason: StopSessionMessage["reason"] = "user"): Promise<void> {
   const session = activeSession;
   if (!session) {
-    await ensureOffscreenDocument();
-    await stopOffscreenCapture().catch(() => {});
+    if (!usesSystemAudioCapture) {
+      await ensureOffscreenDocument();
+      await stopOffscreenCapture().catch(() => {});
+    }
     latestServiceStatus = undefined;
     latestServiceError = undefined;
     return;

@@ -7,6 +7,8 @@ import {
   type SubtitleSettings,
 } from "./settings";
 
+declare const __TARGET_BROWSER__: "chrome" | "firefox";
+
 interface UiStatus {
   readonly active?: boolean;
   readonly serviceStatus?: "starting" | "ready" | "busy" | "stopping";
@@ -25,6 +27,7 @@ function requiredElement<T extends Element>(selector: string): T {
 const startButton = requiredElement<HTMLButtonElement>("#start");
 const stopButton = requiredElement<HTMLButtonElement>("#stop");
 const statusElement = requiredElement<HTMLElement>("#status");
+const systemAudioNotice = requiredElement<HTMLElement>("#system-audio-notice");
 const displayMode = requiredElement<HTMLSelectElement>("#display-mode");
 const sourceLanguage = requiredElement<HTMLSelectElement>("#source-language");
 const position = requiredElement<HTMLSelectElement>("#position");
@@ -34,6 +37,7 @@ const backgroundOpacity = requiredElement<HTMLInputElement>("#background-opacity
 const backgroundOpacityValue = requiredElement<HTMLOutputElement>("#background-opacity-value");
 const textColor = requiredElement<HTMLInputElement>("#text-color");
 let actionError: string | undefined;
+systemAudioNotice.hidden = __TARGET_BROWSER__ !== "firefox";
 
 function renderSettings(settings: SubtitleSettings): void {
   displayMode.value = settings.displayMode;

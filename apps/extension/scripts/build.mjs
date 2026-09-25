@@ -26,6 +26,9 @@ await build({
   platform: "browser",
   sourcemap: true,
   target: "es2022",
+  define: {
+    __TARGET_BROWSER__: JSON.stringify(browser),
+  },
 });
 
 await cp(

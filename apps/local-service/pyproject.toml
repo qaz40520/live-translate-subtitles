@@ -23,6 +23,10 @@ translation = [
   "sentencepiece>=0.2,<1",
   "transformers>=4.46,<6"
 ]
+system-audio = [
+  "SoundCard>=0.4.6,<1",
+  "numpy>=2,<3"
+]
 models = [
   "faster-whisper>=1.1,<2",
   "numpy>=2,<3",
@@ -31,7 +35,8 @@ models = [
   "opencc-python-reimplemented>=0.1.7,<1",
   "torch>=2.6,<3",
   "sentencepiece>=0.2,<1",
-  "transformers>=4.46,<6"
+  "transformers>=4.46,<6",
+  "SoundCard>=0.4.6,<1"
 ]
 dev = [
   "mypy>=1.14,<2",
