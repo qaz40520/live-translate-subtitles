@@ -5,7 +5,9 @@ from __future__ import annotations
 import asyncio
 import base64
 import queue
+import re
 import threading
+from collections import deque
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from time import monotonic
@@ -19,6 +21,9 @@ BYTES_PER_SAMPLE = 2
 TRANSCRIBE_AFTER_SECONDS = 2.4
 ROLLING_WINDOW_SECONDS = 10
 TRANSLATION_THROTTLE_SECONDS = 0.8
+_SENTENCE_PATTERN = re.compile(
+    r"[^.!?。！？]+[.!?。！？](?:\s+|$)"  # noqa: RUF001 - CJK punctuation is intentional
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,6 +58,8 @@ class TranscriptionSession:
         self._translator = translator
         self._target_language = target_language
         self._translation_context: list[str] = []
+        self._recently_translated: deque[str] = deque(maxlen=32)
+        self._previous_completed: set[str] = set()
         self._last_translation_at = 0.0
         self._queue: queue.Queue[AudioChunk | None] = queue.Queue(maxsize=32)
         self._thread = threading.Thread(target=self._run, daemon=True)
@@ -185,15 +192,24 @@ class TranscriptionSession:
             self._emit_status("busy", self._engine.last_latency_ms)
 
     async def _translate(self, segment: TranscriptSegment) -> str:
-        if self._translator is None or not segment.is_final:
+        if self._translator is None:
             return ""
+        completed = _completed_sentences(segment.text, segment.is_final)
+        stable = completed if segment.is_final else tuple(
+            text for text in completed if text in self._previous_completed
+        )
+        self._previous_completed = set(completed)
+        untranslated = [text for text in stable if text not in self._recently_translated]
+        if not untranslated:
+            return ""
+        source_text = " ".join(untranslated)
         wait_seconds = TRANSLATION_THROTTLE_SECONDS - (monotonic() - self._last_translation_at)
         if wait_seconds > 0:
             await asyncio.sleep(wait_seconds)
         try:
             result = await self._translator.translate(
                 TranslationRequest(
-                    text=segment.text,
+                    text=source_text,
                     source_language=segment.source_language,
                     target_language=self._target_language,
                     context=tuple(self._translation_context[-3:]),
@@ -212,7 +228,8 @@ class TranscriptionSession:
                 }
             )
             return ""
-        self._translation_context.append(segment.text)
+        self._translation_context.append(source_text)
+        self._recently_translated.extend(untranslated)
         self._last_translation_at = monotonic()
         return result.translated_text
 
@@ -235,3 +252,18 @@ def _required_int(message: Mapping[str, object], key: str) -> int:
     if not isinstance(value, int) or isinstance(value, bool):
         raise TypeError(f"{key} must be an integer")
     return value
+
+
+def _completed_sentences(text: str, is_final: bool) -> tuple[str, ...]:
+    completed: list[str] = []
+    consumed_until = 0
+    for match in _SENTENCE_PATTERN.finditer(text):
+        sentence = match.group(0).strip()
+        if sentence:
+            completed.append(sentence)
+        consumed_until = match.end()
+    if is_final:
+        tail = text[consumed_until:].strip()
+        if tail:
+            completed.append(tail)
+    return tuple(completed)
