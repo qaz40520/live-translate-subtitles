@@ -18,6 +18,7 @@ await build({
   entryPoints: {
     background: path.join(extensionRoot, "src", "background.ts"),
     content: path.join(extensionRoot, "src", "content.ts"),
+    offscreen: path.join(extensionRoot, "src", "offscreen.ts"),
     popup: path.join(extensionRoot, "src", "popup.ts"),
   },
   format: "esm",
@@ -34,6 +35,14 @@ await cp(
 await cp(
   path.join(extensionRoot, "src", "popup.html"),
   path.join(outdir, "popup.html"),
+);
+await cp(
+  path.join(extensionRoot, "src", "offscreen.html"),
+  path.join(outdir, "offscreen.html"),
+);
+await cp(
+  path.join(extensionRoot, "src", "audio-worklet.js"),
+  path.join(outdir, "audio-worklet.js"),
 );
 
 console.log(`Built ${browser} extension in ${outdir}`);

@@ -9,9 +9,11 @@
 
 ## Milestone 1 — Audio-to-text technical spike
 
-- Capture Chrome tab audio after an explicit click.
-- Stream canonical PCM chunks to the native service.
-- Run Faster Whisper on the RTX 3070 reference machine.
+- [x] Capture Chrome tab audio after an explicit click.
+- [x] Stream canonical PCM chunks to the native service.
+- [x] Add a guarded Faster Whisper adapter and detect the RTX 3070 CUDA runtime.
+- [ ] Download the selected Whisper model after explicit developer consent.
+- [ ] Run Faster Whisper on recorded tab audio using the RTX 3070 reference machine.
 - Measure provisional and final transcript latency for English, Japanese, and Korean.
 - Prove 30 minutes of bounded-memory operation.
 
@@ -42,4 +44,3 @@
 - Improve recovery, accessibility, localization, and diagnostics.
 - Evaluate commercially usable translation adapters.
 - Prepare Chrome Web Store and Firefox Add-ons submissions.
-

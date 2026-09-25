@@ -49,6 +49,34 @@ pnpm build
 python -m unittest discover -s apps/local-service/tests -v
 ```
 
+### Chrome audio-to-text spike
+
+The current milestone contains an experimental Chrome tab-audio pipeline. It
+does not yet translate text.
+
+1. Create `.venv` and install `apps/local-service[stt,dev]` in editable mode.
+2. Build with `pnpm build`.
+3. Load `apps/extension/dist/chrome` as an unpacked extension.
+4. Copy the extension ID from `chrome://extensions`.
+5. Register the native host:
+
+   ```powershell
+   ./apps/local-service/scripts/register-chrome-native-host.ps1 -ExtensionId <extension-id>
+   ```
+
+6. Review the Whisper MIT license and expected download size, then explicitly
+   download the development model:
+
+   ```powershell
+   ./.venv/Scripts/live-translate-download-stt.exe --model large-v3-turbo --yes
+   ```
+
+   Later runs use the local cache under
+   `%LOCALAPPDATA%\LiveTranslateSubtitles\models`.
+
+Without that explicit environment variable, the service refuses network model
+downloads and reports a local model error in the subtitle overlay.
+
 ## Documentation
 
 - [Product specification](docs/product-spec.md)
@@ -59,4 +87,3 @@ python -m unittest discover -s apps/local-service/tests -v
 ## License
 
 Project source code is licensed under Apache-2.0. Third-party models and dependencies retain their own licenses.
-

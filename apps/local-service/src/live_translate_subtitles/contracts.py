@@ -1,7 +1,8 @@
 """Model-independent contracts used inside the local service."""
 
+from collections.abc import Sequence
 from dataclasses import dataclass
-from typing import Protocol, Sequence
+from typing import Protocol
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,4 +54,3 @@ class SpeechToTextEngine(Protocol):
     async def reset(self) -> None: ...
 
     async def unload(self) -> None: ...
-

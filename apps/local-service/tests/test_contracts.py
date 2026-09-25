@@ -5,7 +5,7 @@ from pathlib import Path
 SRC = Path(__file__).resolve().parents[1] / "src"
 sys.path.insert(0, str(SRC))
 
-from live_translate_subtitles.contracts import (  # noqa: E402
+from live_translate_subtitles.contracts import (
     TranscriptSegment,
     TranslationRequest,
 )
@@ -35,4 +35,3 @@ class ContractTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

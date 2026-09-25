@@ -3,7 +3,7 @@
   "name": "Live Translate Subtitles",
   "version": "0.0.0",
   "description": "Local-first real-time translated subtitles for browser media.",
-  "permissions": ["activeTab", "nativeMessaging", "scripting", "storage", "tabCapture"],
+  "permissions": ["activeTab", "nativeMessaging", "offscreen", "scripting", "storage", "tabCapture"],
   "action": {
     "default_popup": "popup.html"
   },
