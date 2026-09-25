@@ -2,19 +2,59 @@
 
 from __future__ import annotations
 
+import ctypes
 import os
+import sys
 from collections.abc import Sequence
+from importlib.util import find_spec
 from pathlib import Path
 from time import perf_counter
 
 from .contracts import TranscriptSegment
+
+_DLL_DIRECTORY_HANDLES: list[object] = []
+_CUDA_DLL_HANDLES: list[object] = []
+
+
+def configure_windows_cuda_dlls() -> None:
+    if os.name != "nt" or not hasattr(os, "add_dll_directory"):
+        return
+
+    dll_directories: list[Path] = []
+    for package in ("nvidia.cublas", "nvidia.cudnn", "nvidia.cuda_nvrtc"):
+        spec = find_spec(package)
+        if spec is None or not spec.submodule_search_locations:
+            continue
+        for package_root in spec.submodule_search_locations:
+            dll_directory = Path(package_root) / "bin"
+            if dll_directory.is_dir():
+                _DLL_DIRECTORY_HANDLES.append(os.add_dll_directory(str(dll_directory)))
+                dll_directories.append(dll_directory)
+
+    # CTranslate2 resolves CUDA libraries with LoadLibrary at runtime. Python's
+    # DLL directory handles cover extension imports but are not consistently
+    # honored by that native lookup, so preload the two public entry points.
+    for dll_name in ("cublas64_12.dll", "cudnn64_9.dll"):
+        for dll_directory in dll_directories:
+            dll_path = dll_directory / dll_name
+            if dll_path.is_file():
+                _CUDA_DLL_HANDLES.append(ctypes.WinDLL(str(dll_path)))  # type: ignore[attr-defined]
+                break
 
 
 def default_model_root() -> Path:
     configured = os.environ.get("LTS_MODEL_DIR")
     if configured:
         return Path(configured)
-    local_data = Path(os.environ.get("LOCALAPPDATA", Path.home()))
+    if sys.prefix != sys.base_prefix:
+        return Path(sys.prefix).resolve().parent / "models"
+    # MSIX-packaged developer tools can virtualize LOCALAPPDATA. Deriving the
+    # conventional user path keeps the browser-launched native host and the
+    # development downloader on the same cache directory.
+    if os.name == "nt":
+        local_data = Path.home() / "AppData" / "Local"
+    else:
+        local_data = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
     return local_data / "LiveTranslateSubtitles" / "models"
 
 
@@ -26,6 +66,7 @@ class FasterWhisperEngine:
         self.last_latency_ms = 0
 
     async def load(self) -> None:
+        configure_windows_cuda_dlls()
         try:
             import ctranslate2  # type: ignore[import-untyped]
             from faster_whisper import WhisperModel  # type: ignore[import-untyped]

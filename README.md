@@ -71,8 +71,8 @@ does not yet translate text.
    ./.venv/Scripts/live-translate-download-stt.exe --model large-v3-turbo --yes
    ```
 
-   Later runs use the local cache under
-   `%LOCALAPPDATA%\LiveTranslateSubtitles\models`.
+   Development runs use the ignored repository directory `models/`. A packaged
+   release uses `%LOCALAPPDATA%\LiveTranslateSubtitles\models`.
 
 Without that explicit environment variable, the service refuses network model
 downloads and reports a local model error in the subtitle overlay.

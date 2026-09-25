@@ -13,7 +13,9 @@ dependencies = []
 [project.optional-dependencies]
 stt = [
   "faster-whisper>=1.1,<2",
-  "numpy>=2,<3"
+  "numpy>=2,<3",
+  "nvidia-cublas-cu12>=12.4,<13; platform_system == 'Windows'",
+  "nvidia-cudnn-cu12>=9,<10; platform_system == 'Windows'"
 ]
 translation = [
   "opencc-python-reimplemented>=0.1.7,<1",
@@ -23,6 +25,8 @@ translation = [
 models = [
   "faster-whisper>=1.1,<2",
   "numpy>=2,<3",
+  "nvidia-cublas-cu12>=12.4,<13; platform_system == 'Windows'",
+  "nvidia-cudnn-cu12>=9,<10; platform_system == 'Windows'",
   "opencc-python-reimplemented>=0.1.7,<1",
   "sentencepiece>=0.2,<1",
   "transformers>=4.46,<6"
