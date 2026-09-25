@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "Live Translate Subtitles",
+  "version": "0.0.0",
+  "description": "Local-first real-time translated subtitles for browser media.",
+  "permissions": ["activeTab", "nativeMessaging", "scripting", "storage", "tabCapture"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  }
+}

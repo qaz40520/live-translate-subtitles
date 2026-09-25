@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "live-translate-subtitles-service"
+version = "0.0.0"
+description = "Local speech recognition and translation service"
+requires-python = ">=3.11"
+license = { text = "Apache-2.0" }
+dependencies = []
+
+[project.optional-dependencies]
+models = [
+  "faster-whisper>=1.1,<2",
+  "opencc-python-reimplemented>=0.1.7,<1",
+  "sentencepiece>=0.2,<1",
+  "transformers>=4.46,<6"
+]
+dev = [
+  "mypy>=1.14,<2",
+  "pytest>=8.3,<9",
+  "ruff>=0.9,<1"
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/live_translate_subtitles"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+

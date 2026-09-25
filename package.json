@@ -1,0 +1,11 @@
+{
+  "name": "live-translate-subtitles",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.19.0",
+  "scripts": {
+    "build": "pnpm --filter @lts/protocol build && pnpm --filter @lts/extension build",
+    "check": "pnpm --filter @lts/protocol check && pnpm --filter @lts/extension check",
+    "test": "pnpm --filter @lts/protocol test"
+  }
+}

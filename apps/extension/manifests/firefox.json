@@ -1,0 +1,20 @@
+{
+  "manifest_version": 3,
+  "name": "Live Translate Subtitles",
+  "version": "0.0.0",
+  "description": "Local-first real-time translated subtitles for browser media.",
+  "permissions": ["activeTab", "nativeMessaging", "scripting", "storage"],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "scripts": ["background.js"],
+    "type": "module"
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "live-translate-subtitles@example.invalid",
+      "strict_min_version": "128.0"
+    }
+  }
+}
