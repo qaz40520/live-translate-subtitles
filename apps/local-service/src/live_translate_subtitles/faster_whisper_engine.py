@@ -14,8 +14,8 @@ from .contracts import TranscriptSegment
 
 _DLL_DIRECTORY_HANDLES: list[object] = []
 _CUDA_DLL_HANDLES: list[object] = []
-FINAL_SILENCE_SECONDS = 0.8
-PUNCTUATED_SILENCE_SECONDS = 0.35
+FINAL_SILENCE_SECONDS = 0.6
+PUNCTUATED_SILENCE_SECONDS = 0.25
 
 
 def configure_windows_cuda_dlls() -> None:

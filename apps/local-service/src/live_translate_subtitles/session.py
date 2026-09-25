@@ -18,9 +18,9 @@ from .faster_whisper_engine import FasterWhisperEngine
 
 SAMPLE_RATE_HZ = 16000
 BYTES_PER_SAMPLE = 2
-TRANSCRIBE_AFTER_SECONDS = 2.4
+TRANSCRIBE_AFTER_SECONDS = 0.8
 ROLLING_WINDOW_SECONDS = 10
-TRANSLATION_THROTTLE_SECONDS = 0.8
+TRANSLATION_THROTTLE_SECONDS = 0.4
 _SENTENCE_PATTERN = re.compile(
     r"[^.!?。！？]+[.!?。！？](?:\s+|$)"  # noqa: RUF001 - CJK punctuation is intentional
 )

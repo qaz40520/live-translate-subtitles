@@ -61,14 +61,14 @@ class FakeTranslator:
 
 
 class SessionTests(unittest.TestCase):
-    def test_three_audio_chunks_trigger_a_provisional_transcript(self) -> None:
+    def test_one_audio_chunk_triggers_a_low_latency_provisional_transcript(self) -> None:
         emitted: list[dict[str, object]] = []
         engine = FakeEngine()
         session = TranscriptionSession("session-1", emitted.append, engine)
         session.start()
 
         chunk = base64.b64encode(bytes(25600)).decode("ascii")
-        for sequence in range(3):
+        for sequence in range(1):
             session.submit_base64(
                 {
                     "sequence": sequence,
@@ -86,7 +86,7 @@ class SessionTests(unittest.TestCase):
         session.stop()
         updates = [message for message in emitted if message.get("type") == "subtitle.update"]
         self.assertEqual(len(updates), 1)
-        self.assertEqual(updates[0]["sourceText"], "received 76800 bytes")
+        self.assertEqual(updates[0]["sourceText"], "received 25600 bytes")
         self.assertFalse(engine.loaded)
 
     def test_translated_text_is_emitted_without_coupling_to_an_adapter(self) -> None:
@@ -101,7 +101,7 @@ class SessionTests(unittest.TestCase):
         session.start()
 
         chunk = base64.b64encode(bytes(25600)).decode("ascii")
-        for sequence in range(3):
+        for sequence in range(1):
             session.submit_base64(
                 {
                     "sequence": sequence,
@@ -118,8 +118,8 @@ class SessionTests(unittest.TestCase):
 
         session.stop()
         updates = [message for message in emitted if message.get("type") == "subtitle.update"]
-        self.assertEqual(updates[0]["translatedSourceText"], "received 76800 bytes")
-        self.assertEqual(updates[0]["translatedText"], "translated: received 76800 bytes")
+        self.assertEqual(updates[0]["translatedSourceText"], "received 25600 bytes")
+        self.assertEqual(updates[0]["translatedText"], "translated: received 25600 bytes")
         self.assertFalse(translator.loaded)
 
     def test_provisional_text_is_not_translated(self) -> None:
@@ -133,7 +133,7 @@ class SessionTests(unittest.TestCase):
         session.start()
 
         chunk = base64.b64encode(bytes(25600)).decode("ascii")
-        for sequence in range(3):
+        for sequence in range(1):
             session.submit_base64(
                 {
                     "sequence": sequence,
@@ -165,7 +165,7 @@ class SessionTests(unittest.TestCase):
         session.start()
 
         chunk = base64.b64encode(bytes(25600)).decode("ascii")
-        for sequence in range(6):
+        for sequence in range(2):
             session.submit_base64(
                 {
                     "sequence": sequence,

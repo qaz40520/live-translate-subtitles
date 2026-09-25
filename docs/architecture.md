@@ -73,7 +73,9 @@ available as a replaceable fallback adapter, and future engines must satisfy the
 - Backpressure is explicit; the extension must not build an unbounded queue.
 - Provisional subtitle updates replace the current segment.
 - Confirmed subtitle segments are immutable.
-- Translation is throttled to roughly 800 ms and carries recent confirmed source segments as context.
+- Speech recognition runs once per 800 ms audio chunk. Translation is throttled to roughly
+  400 ms and still waits for a finalized utterance or a sentence that remains stable across
+  two recognition passes.
 
 ## Security boundaries
 
